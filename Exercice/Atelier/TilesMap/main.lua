@@ -6,28 +6,24 @@ end
 -- Cette ligne permet d'afficher des traces dans la console pendant l'éxécution
 io.stdout:setvbuf("no")
 
-require("PlayerManager")
-require("ZombieManager")
-require("InputManager")
-require("Debugger")
+local myGame = require("game")
 
-Player = {}
-Enemy = {}
+love.graphics.setDefaultFilter("nearest")
+love.window.setMode(1024, 768)
 
 function love.load()
-    CreatePlayer()
-
+    myGame.Load()
 end
 
 function love.update(dt)
-    InputeManager(dt)
-
-    UpdatePlayerImage(dt)
 end
 
 function love.draw()
-    DrawPlayer()
+    myGame.Draw()
 end
 
 function love.keypressed(key)
+    if (key == "escape") then
+        love.event.quit()
+    end
 end

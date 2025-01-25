@@ -154,7 +154,7 @@ function FindTheRectangle(mx, my)
 end
 
 function love.load()
-    NbrRectangle = 100
+    NbrRectangle = 500
     CreateRectangle()
 
     for i = 1, NbrRectangle do

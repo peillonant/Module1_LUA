@@ -22,9 +22,9 @@ Heart.alpha = 1
 function UpdateHeartToDisplay()
     Heart.nbrFull = math.floor(Heart.pdv)
 
-    if ((Heart.pdv % Heart.nbrFull > 0) or (Heart.pdv > 0 and Heart.pdv < 1)) then
+    if ((Heart.pdv % Heart.nbrFull > 0) or (Heart.pdv == 0.5)) then
         Heart.nbrHalf = 1
-    else 
+    else
         Heart.nbrHalf = 0
     end
 end
@@ -41,7 +41,6 @@ function UpdateHealt(integer)
     end
 end
 
--- a retravailler
 function UpdateClignotement(dt)
     if (Heart.nbrFull == 0 and Heart.pdv > 0) then
         Heart.alpha = Heart.alpha + dt
@@ -54,64 +53,75 @@ function UpdateClignotement(dt)
 end
 
 function DisplayFullHeart()
-    local sizeHealtBar = (Heart.nbrFull*Heart.image.full:getWidth()*Heart.imageScale + Heart.nbrHalf*Heart.image.half_left:getWidth()*Heart.imageScale)/2
+    local sizeHealtBar =
+        (Heart.nbrFull * Heart.image.full:getWidth() * Heart.imageScale +
+        Heart.nbrHalf * Heart.image.half_left:getWidth() * Heart.imageScale) /
+        2
 
     if (Heart.nbrFull > 0) then
-        love.graphics.setColor(1,1,1,1)
-        for i=0,Heart.nbrFull-1 do
-            local px = love.graphics.getWidth()/2 - sizeHealtBar + Heart.image.full:getWidth()*i*Heart.imageScale
+        love.graphics.setColor(1, 1, 1, 1)
+        for i = 0, Heart.nbrFull - 1 do
+            local px = love.graphics.getWidth() / 2 - sizeHealtBar + Heart.image.full:getWidth() * i * Heart.imageScale
             local py = 0
-            love.graphics.draw(Heart.image.full, px , py , 0, Heart.imageScale, Heart.imageScale)
+            love.graphics.draw(Heart.image.full, px, py, 0, Heart.imageScale, Heart.imageScale)
         end
     end
 
     if (Heart.nbrHalf > 0) then
-        love.graphics.setColor(1,1,1,Heart.alpha)
-        local px = love.graphics.getWidth()/2 - sizeHealtBar + (Heart.image.full:getWidth()*Heart.nbrFull*Heart.imageScale)
+        love.graphics.setColor(1, 1, 1, Heart.alpha)
+        local px =
+            love.graphics.getWidth() / 2 - sizeHealtBar +
+            (Heart.image.full:getWidth() * Heart.nbrFull * Heart.imageScale)
         local py = 0
-        love.graphics.draw(Heart.image.half_left, px , py, 0, Heart.imageScale, Heart.imageScale)
+        love.graphics.draw(Heart.image.half_left, px, py, 0, Heart.imageScale, Heart.imageScale)
     end
 end
 
 -- On this function, we are taking the risk of the size of the Half_left of the heart and the Half_right are the same size to form a full Heart when they have the same position
 function DisplayFullHeart_by_half()
-    local sizeHealtBar = (Heart.nbrFull*Heart.image.half_left:getHeight()*Heart.imageScale + Heart.nbrHalf*Heart.image.half_left:getHeight()*Heart.imageScale)/2
+    local sizeHealtBar =
+        (Heart.nbrFull * Heart.image.half_left:getHeight() * Heart.imageScale +
+        Heart.nbrHalf * Heart.image.half_left:getHeight() * Heart.imageScale) /
+        2
 
     if (Heart.nbrFull > 0) then
-        love.graphics.setColor(1,1,1,1)
-        for i=0,Heart.nbrFull-1 do
+        love.graphics.setColor(1, 1, 1, 1)
+        for i = 0, Heart.nbrFull - 1 do
             local px = 0
-            local py = love.graphics.getHeight()/2 - sizeHealtBar + Heart.image.half_left:getHeight()*i*Heart.imageScale
-            
-            love.graphics.draw(Heart.image.half_left, px , py , 0, Heart.imageScale, Heart.imageScale)
-            love.graphics.draw(Heart.image.half_right, px , py , 0, Heart.imageScale, Heart.imageScale)
+            local py =
+                love.graphics.getHeight() / 2 - sizeHealtBar + Heart.image.half_left:getHeight() * i * Heart.imageScale
+
+            love.graphics.draw(Heart.image.half_left, px, py, 0, Heart.imageScale, Heart.imageScale)
+            love.graphics.draw(Heart.image.half_right, px, py, 0, Heart.imageScale, Heart.imageScale)
         end
     end
 
     if (Heart.nbrHalf > 0) then
-        love.graphics.setColor(1,1,1,Heart.alpha)
+        love.graphics.setColor(1, 1, 1, Heart.alpha)
         local px = 0
-        local py = love.graphics.getHeight()/2 - sizeHealtBar + (Heart.image.half_left:getHeight()*Heart.nbrFull*Heart.imageScale)
-        love.graphics.draw(Heart.image.half_left, px , py, 0, Heart.imageScale, Heart.imageScale)
+        local py =
+            love.graphics.getHeight() / 2 - sizeHealtBar +
+            (Heart.image.half_left:getHeight() * Heart.nbrFull * Heart.imageScale)
+        love.graphics.draw(Heart.image.half_left, px, py, 0, Heart.imageScale, Heart.imageScale)
     end
 end
 
 function DisplayTextExplication()
     -- Display command to impact the Healt
-    love.graphics.setColor(1,1,1,1)
+    love.graphics.setColor(1, 1, 1, 1)
 
     local text_2 = {}
-    text_2.string = "A for -1 / Z for -0.5 / E for +0.5 / R for +0.5 / T for Full Life"
-    text_2.px = love.graphics.getWidth()/2 - Font:getWidth(text_2.string)/2
-    text_2.py = love.graphics.getHeight()/2
+    text_2.string = "A for -1 / Z for -0.5 / E for +0.5 / R for +1 / T for Full Life"
+    text_2.px = love.graphics.getWidth() / 2 - Font:getWidth(text_2.string) / 2
+    text_2.py = love.graphics.getHeight() / 2
 
     local text = {}
     text.string = "Here the command to impact the number of Heart"
-    text.px = love.graphics.getWidth()/2 - Font:getWidth(text.string)/2
-    text.py = love.graphics.getHeight()/2 - Font:getHeight(text_2.string)
-    
-    love.graphics.print(text.string, text.px , text.py )
-    love.graphics.print(text_2.string, text_2.px , text_2.py )
+    text.px = love.graphics.getWidth() / 2 - Font:getWidth(text.string) / 2
+    text.py = love.graphics.getHeight() / 2 - Font:getHeight(text_2.string)
+
+    love.graphics.print(text.string, text.px, text.py)
+    love.graphics.print(text_2.string, text_2.px, text_2.py)
 end
 
 function love.load()
@@ -126,7 +136,6 @@ function love.update(dt)
 end
 
 function love.draw()
-
     -- Afficher les coeurs pleins
     DisplayFullHeart()
 
@@ -165,20 +174,3 @@ function love.keypressed(key)
         UpdateHealt(5)
     end
 end
-
-
---if (Heart.fullHeart == 0) then
---    -- Clignotement here
---    if (changeDisplay == true and previousState == "hide") then
---        local px = love.graphics.getWidth()/2 + ((Heart.full:getWidth()*Heart.imageScale)*Heart.fullHeart)
---        local py = 0
---
---        love.graphics.draw(Heart.half_left, px , py, 0, Heart.imageScale, Heart.imageScale )
---        
---        previousState = "display"
---        changeDisplay = false
---    elseif (changeDisplay == true and previousState == "display") then
---        previousState = "hide"
---        changeDisplay = false
---    end
---else

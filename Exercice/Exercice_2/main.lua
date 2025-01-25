@@ -13,20 +13,20 @@ Letters = {"A", "B", "C", "D", "E", "F", "G", "H"}
 
 function CreateBoard(sizeSquare)
     Board.sizeSquare = sizeSquare
-    Board.center_x = love.graphics.getWidth()/2
-    Board.center_y = love.graphics.getHeight()/2
+    Board.center_x = love.graphics.getWidth() / 2
+    Board.center_y = love.graphics.getHeight() / 2
     for i = 1, 8 do -- i = col
         Board[i] = {}
         for j = 1, 8 do -- j = line
             Board[i][j] = {}
             Board[i][j].col = j
-            Board[i][j].line =  Letters[i]
+            Board[i][j].line = Letters[i]
 
             Board[i][j].color = ColorTile(i, j)
-            
+
             Board[i][j].px = ComputePositionX(i)
 
-            Board[i][j].py = ComputePositionY(j) 
+            Board[i][j].py = ComputePositionY(j)
         end
     end
 end
@@ -68,7 +68,7 @@ function ComputePositionX(index)
         pos = Board.center_x + (Board.sizeSquare * 2)
     elseif (index == 8) then
         pos = Board.center_x + (Board.sizeSquare * 3)
-    end 
+    end
 
     return pos
 end
@@ -93,49 +93,89 @@ function ComputePositionY(index)
         pos = Board.center_y - (Board.sizeSquare * 3)
     elseif (index == 8) then
         pos = Board.center_y - (Board.sizeSquare * 4)
-    end 
+    end
 
     return pos
 end
 
 function DrawPosition()
-    for line = 1,8 do
-        for col = 1,8 do
-            love.graphics.setColor(1,1,1)
-            love.graphics.print(Board[line][col].line..Board[line][col].col, Board[line][col].px+25, Board[line][col].py+25)
+    for line = 1, 8 do
+        for col = 1, 8 do
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.print(
+                Board[line][col].line .. Board[line][col].col,
+                Board[line][col].px + 25,
+                Board[line][col].py + 25
+            )
         end
     end
 end
 
 function RetrievePositionPawn(s_Letter, position)
-    return (position + Board.sizeSquare/2 - Font:getWidth(s_Letter))
+    return (position + Board.sizeSquare / 2 - Font:getWidth(s_Letter))
 end
 
 function DrawnPawn(index)
     -- pawn
-    for i = 1,8 do
-        love.graphics.print("P", RetrievePositionPawn("P", Board[i][index].px), RetrievePositionPawn("P", Board[i][index].py))
+    for i = 1, 8 do
+        love.graphics.print(
+            "P",
+            RetrievePositionPawn("P", Board[i][index].px),
+            RetrievePositionPawn("P", Board[i][index].py)
+        )
     end
 
-    if (index == 2) then 
+    if (index == 2) then
         index = 1
     else
         index = 8
     end
 
     -- Rook R
-        love.graphics.print("R", RetrievePositionPawn("R", Board[1][index].px), RetrievePositionPawn("R", Board[1][index].py))
-        love.graphics.print("R", RetrievePositionPawn("R", Board[8][index].px), RetrievePositionPawn("R", Board[8][index].py))
+    love.graphics.print(
+        "R",
+        RetrievePositionPawn("R", Board[1][index].px),
+        RetrievePositionPawn("R", Board[1][index].py)
+    )
+    love.graphics.print(
+        "R",
+        RetrievePositionPawn("R", Board[8][index].px),
+        RetrievePositionPawn("R", Board[8][index].py)
+    )
     -- Knight N
-        love.graphics.print("N", RetrievePositionPawn("N", Board[2][index].px), RetrievePositionPawn("N", Board[2][index].py))
-        love.graphics.print("N", RetrievePositionPawn("N", Board[7][index].px), RetrievePositionPawn("N", Board[7][index].py))
+    love.graphics.print(
+        "N",
+        RetrievePositionPawn("N", Board[2][index].px),
+        RetrievePositionPawn("N", Board[2][index].py)
+    )
+    love.graphics.print(
+        "N",
+        RetrievePositionPawn("N", Board[7][index].px),
+        RetrievePositionPawn("N", Board[7][index].py)
+    )
     -- Bishop B
-        love.graphics.print("B", RetrievePositionPawn("B", Board[3][index].px), RetrievePositionPawn("B", Board[3][index].py))
-        love.graphics.print("B", RetrievePositionPawn("B", Board[6][index].px), RetrievePositionPawn("B", Board[6][index].py))
+    love.graphics.print(
+        "B",
+        RetrievePositionPawn("B", Board[3][index].px),
+        RetrievePositionPawn("B", Board[3][index].py)
+    )
+    love.graphics.print(
+        "B",
+        RetrievePositionPawn("B", Board[6][index].px),
+        RetrievePositionPawn("B", Board[6][index].py)
+    )
     -- Queen Q
-        love.graphics.print("Q", RetrievePositionPawn("Q", Board[4][index].px), RetrievePositionPawn("Q", Board[4][index].py))
+    love.graphics.print(
+        "Q",
+        RetrievePositionPawn("Q", Board[4][index].px),
+        RetrievePositionPawn("Q", Board[4][index].py)
+    )
     -- King K
-        love.graphics.print("K", RetrievePositionPawn("K", Board[5][index].px), RetrievePositionPawn("K", Board[5][index].py))
+    love.graphics.print(
+        "K",
+        RetrievePositionPawn("K", Board[5][index].px),
+        RetrievePositionPawn("K", Board[5][index].py)
+    )
 end
 
 function ComputeWhichLine(position)
@@ -149,47 +189,48 @@ function ComputeWhichCol(position)
 end
 
 function love.load()
-    CreateBoard(70)
+    CreateBoard(50)
 
     Font = love.graphics.newFont(18)
     love.graphics.setFont(Font)
-
 end
 
 function love.update(dt)
 end
 
 function love.mousepressed(mx, my, mbutton)
-    if mbutton == 1 then -- check the Left click 
-        if (( (mx < Board.center_x + (Board.sizeSquare*4)) and mx > Board.center_x - (Board.sizeSquare * 4) ) 
-            and ((my < Board.center_y + (Board.sizeSquare*4)) and my > Board.center_y - (Board.sizeSquare * 4)))then
-                local line = ComputeWhichLine(my)
-                local col = ComputeWhichCol(mx)
+    if mbutton == 1 then -- check the Left click
+        if
+            (((mx < Board.center_x + (Board.sizeSquare * 4)) and mx > Board.center_x - (Board.sizeSquare * 4)) and
+                ((my < Board.center_y + (Board.sizeSquare * 4)) and my > Board.center_y - (Board.sizeSquare * 4)))
+         then
+            local line = ComputeWhichLine(my)
+            local col = ComputeWhichCol(mx)
 
-                print(Board[col][line].line, Board[col][line].col)
+            print(Board[col][line].line, Board[col][line].col)
         else
-            print("Click outside of the board wit the coordonate of => "..tostring(mx).." / "..tostring(my))
+            print("Click outside of the board wit the coordonate of => " .. tostring(mx) .. " / " .. tostring(my))
         end
     end
 end
 
 function love.draw()
     -- Drawing the Boardgame
-    for i = 1,8 do
-        for j = 1,8 do
+    for i = 1, 8 do
+        for j = 1, 8 do
             love.graphics.setColor(Board[i][j].color.R, Board[i][j].color.G, Board[i][j].color.B)
             love.graphics.rectangle("fill", Board[i][j].px, Board[i][j].py, Board.sizeSquare, Board.sizeSquare)
         end
     end
 
     --DrawPosition()
-    
-    -- First manage the display of Black pawn   
-    love.graphics.setColor(0,0,0)
+
+    -- First manage the display of Black pawn
+    love.graphics.setColor(0, 0, 0)
     -- To drawing all piece of a side send the index of the pawn's line
     DrawnPawn(7)
 
-    love.graphics.setColor(1,1,1)
+    love.graphics.setColor(1, 1, 1)
     DrawnPawn(2)
 end
 
