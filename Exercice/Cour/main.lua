@@ -57,44 +57,13 @@ function CreateShootingStar()
     newEtoile.scale = 0.1
     newEtoile.scaleMax = 0.12
     newEtoile.scaleMin = 0.05
-    newEtoile.speedPulse = 0.05
+    newEtoile.speedPulse = love.math.random(5, 10) / 100
     newEtoile.ox = star.img:getWidth() / 2
     newEtoile.oy = star.img:getHeight() / 2
     newEtoile.speed = love.math.random(1, 5)
 
     newEtoile.trail = {}
-    zoom = true
     return newEtoile
-end
-
-function love.load()
-    for i = 1, NBRSTAR do
-        -- Create Classic Star
-        -- table.insert(star, CreateStar())
-        -- star.type = "classic"
-
-        -- Create Shooting Star
-        table.insert(star, CreateShootingStar())
-        star.type = "shooting"
-    end
-end
-
-function love.update(dt)
-    if (pause) then
-        for i = 1, #star do
-            -- Rotation de l'ensemble des stars
-            Rotation(star[i], dt)
-
-            -- Pulsation
-            Pulsation(star[i], dt)
-
-            -- Movement
-            Movement(star[i])
-
-            -- Remove trail
-            RemoveTrail(star[i], dt)
-        end
-    end
 end
 
 function Rotation(starLocal, dt)
@@ -103,16 +72,12 @@ end
 
 function Pulsation(starLocal, dt)
     if (starLocal.scale >= starLocal.scaleMax) then
-        starLocal.zoom = false
+        starLocal.speedPulse = starLocal.speedPulse * -1
     elseif (starLocal.scale <= starLocal.scaleMin) then
-        starLocal.zoom = true
+        starLocal.speedPulse = starLocal.speedPulse * -1
     end
 
-    if (starLocal.zoom) then
-        starLocal.scale = starLocal.scale + dt * starLocal.speedPulse
-    elseif (not starLocal.zoom) then
-        starLocal.scale = starLocal.scale - dt * starLocal.speedPulse
-    end
+    starLocal.scale = starLocal.scale + dt * starLocal.speedPulse
 end
 
 function RemoveStar(starLocal)
@@ -150,7 +115,7 @@ function Movement(starLocal)
     end
 
     starLocal.px = starLocal.px + starLocal.speed * starLocal.directionX
-    starLocal.py = starLocal.py + starLocal.speed * starLocal.directionY
+    starLocal.py = starLocal.py + starLocal.speed
 end
 
 function CreateTrail(starLocal)
@@ -165,6 +130,8 @@ function CreateTrail(starLocal)
 end
 
 function RemoveTrail(starLocal, dt)
+    print(#starLocal.trail)
+
     if (#starLocal.trail) then
         for i = #starLocal.trail, 1, -1 do
             starLocal.trail[i].lifeTimeCurrent = starLocal.trail[i].lifeTimeCurrent + dt
@@ -180,6 +147,49 @@ end
 function Reverse(starLocal)
     starLocal.directionX = starLocal.directionX * -1
     starLocal.directionY = starLocal.directionY * -1
+end
+
+function Reset(star)
+    star.img = love.graphics.newImage("image/star.png")
+    star.rotation = 0
+    star.scale = 0
+    star.ox = star.img:getWidth() / 2
+    star.oy = star.img:getHeight() / 2
+end
+
+function ChangePosition(star)
+    star.px = love.math.random(1, love.graphics.getWidth() - star.img:getWidth())
+    star.py = love.math.random(1, love.graphics.getHeight() - star.img:getHeight())
+end
+
+function love.load()
+    for i = 1, NBRSTAR do
+        -- Create Classic Star
+        -- table.insert(star, CreateStar())
+        -- star.type = "classic"
+
+        -- Create Shooting Star
+        table.insert(star, CreateShootingStar())
+        star.type = "shooting"
+    end
+end
+
+function love.update(dt)
+    if (pause) then
+        for i = 1, #star do
+            -- Rotation de l'ensemble des stars
+            Rotation(star[i], dt)
+
+            -- Pulsation
+            Pulsation(star[i], dt)
+
+            -- Movement
+            Movement(star[i])
+
+            -- Remove trail
+            RemoveTrail(star[i], dt)
+        end
+    end
 end
 
 function love.draw()
@@ -245,17 +255,4 @@ function love.keypressed(key)
     if (key == "p") then
         pause = not pause
     end
-end
-
-function Reset(star)
-    star.img = love.graphics.newImage("image/star.png")
-    star.rotation = 0
-    star.scale = 0
-    star.ox = star.img:getWidth() / 2
-    star.oy = star.img:getHeight() / 2
-end
-
-function ChangePosition(star)
-    star.px = love.math.random(1, love.graphics.getWidth() - star.img:getWidth())
-    star.py = love.math.random(1, love.graphics.getHeight() - star.img:getHeight())
 end
