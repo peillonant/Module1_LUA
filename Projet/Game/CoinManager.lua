@@ -1,9 +1,54 @@
 local generalMethod = require("GeneralMethod")
 local sceneState = require("MAE/SceneState")
 local mySpriteManager = require("Game/SpriteManager")
+local myAudio = require("Game/AudioManager")
 
 local coins = {}
 
+---------------------------------  LOCAL FUNCTION  ----------------------------------------
+
+-- Function that update the Frame of the Image
+local function UpdateCurrentImage(dt, localCoin)
+    if (localCoin ~= nil) then
+        localCoin.timeSinceLastChangeImage = localCoin.timeSinceLastChangeImage + dt
+
+        if (localCoin.timeSinceLastChangeImage > localCoin.delay) then
+            localCoin.currentIndexImage = localCoin.currentIndexImage + 1
+            localCoin.timeSinceLastChangeImage = 0
+        end
+
+        if (localCoin.currentIndexImage > localCoin.indexMax) then
+            localCoin.currentIndexImage = localCoin.indexMin
+        end
+    end
+end
+
+-- Check if the dist between the coin and the charact is below 50 pixel
+-- If Yes, we add the coin on the inventory of the Charact and remove the coin from the list
+-- WORKING ON THAT WITH THE NEW COLLIDER SYSTEM
+local function CheckCollision(myCharact, localCoin)
+    if (localCoin ~= nil) then
+        local PositionX = localCoin.px + generalMethod.TILE_WIDTH / 2
+        local PositionY = localCoin.py + generalMethod.TILE_HEIGHT / 2
+
+        local dist = generalMethod.dist(PositionX , PositionY, myCharact.px, myCharact.py)
+
+        if (dist < generalMethod.TILE_WIDTH / 2) then
+            myCharact.nbCoin = myCharact.nbCoin + 1
+            return true
+        else
+            return false
+        end
+    else
+        return false
+    end
+end
+
+-------------------------------------------------------------------------------------------
+
+------------------------ FUNCTION CALLED BY OTHER MODULE ----------------------------------
+
+-- Function called by the LevelManager to create a line of the Coin tab for each Room
 function coins.LinkedRoom(nbrRooms)
     for i = 1, nbrRooms do
         coins[i] = {}
@@ -26,37 +71,6 @@ function coins.CreateCoins(nbrCoin, entityPX, entityPY)
 
         table.insert(coins[generalMethod.currentRoom], newCoin)
     end
-
-    if (sceneState.DEBUGGERMODE == true) then
-    end
-end
-
-local function UpdateCurrentImage(dt, localCoin)
-    if (localCoin ~= nil) then
-        localCoin.timeSinceLastChangeImage = localCoin.timeSinceLastChangeImage + dt
-
-        if (localCoin.timeSinceLastChangeImage > localCoin.delay) then
-            localCoin.currentIndexImage = localCoin.currentIndexImage + 1
-            localCoin.timeSinceLastChangeImage = 0
-        end
-
-        if (localCoin.currentIndexImage > localCoin.indexMax) then
-            localCoin.currentIndexImage = localCoin.indexMin
-        end
-    end
-end
-
--- Check if the dist between the coin and the charact is below 50 pixel
--- If Yes, we add the coin on the inventory of the Charact and remove the coin from the list
-local function CheckCollision(myCharact, localCoin)
-    local dist = generalMethod.dist(localCoin.px, localCoin.py, myCharact.px, myCharact.py)
-
-    if (dist < generalMethod.TILE_WIDTH / 2) then
-        myCharact.nbCoin = myCharact.nbCoin + 1
-        return true
-    else
-        return false
-    end
 end
 
 -- Function called by the GameManager Update
@@ -66,13 +80,13 @@ function coins.UpdateCoins(dt, myCharact)
         UpdateCurrentImage(dt, localCoin)
 
         if (CheckCollision(myCharact, localCoin)) then
-            table.remove(coins, i)
+            myAudio.playSound(myAudio.coin)
+            table.remove(coins[generalMethod.currentRoom], i)
         end
     end
 end
 
 -- Function called by the GameManager on the draw function
--- Bug lors du gameover
 function coins.DrawCoin()
     for i = 1, #coins[generalMethod.currentRoom] do
         local localCoin = coins[generalMethod.currentRoom][i]

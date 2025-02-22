@@ -6,11 +6,35 @@ local myBonus = require("Entities/Bonus")
 
 local HUD = {}
 
+HUD.notEnoughCoin = false
+
 local panel = love.graphics.newImage("Asset/Interface/Age_1/image/panel_beige.png")
 local button = love.graphics.newImage("Asset/Interface/Age_1/image/button_grey_info.png")
 
 local buttonSizeX = 2
 local buttonSizeY = 1.25
+
+-------------------------------- LOCAL FUNCTION LINKED   ----------------------------------
+
+-- Function to change the background of the item regarding the Rarity of it
+local function RarityObject(px, py)
+    px = px - generalMethod.TILE_WIDTH
+    py = py - generalMethod.TILE_HEIGHT
+
+    if (myCharact.weaponRarity == myArmory.rarity.COMMON) then
+        love.graphics.setColor(1, 1, 1, 0.75)
+    elseif (myCharact.weaponRarity == myArmory.rarity.UNCOMMON) then
+        love.graphics.setColor(0.35, 0.95, 0.28, 0.75)
+    elseif (myCharact.weaponRarity == myArmory.rarity.RARE) then
+        love.graphics.setColor(0.41, 0.60, 0.94, 0.75)
+    else
+        love.graphics.setColor(1, 1, 1, 0)
+    end
+
+    love.graphics.rectangle("fill", px, py, generalMethod.TILE_WIDTH * 2, generalMethod.TILE_HEIGHT * 2)
+
+    love.graphics.setColor(1, 1, 1, 1)
+end
 
 -- Function to Compute and Draw the time of the Cooldown
 local function CooldownDisplay(px, canUse, timer, cooldown)
@@ -28,7 +52,7 @@ local function CooldownDisplay(px, canUse, timer, cooldown)
         end
     end
 
-    love.graphics.setColor(1, 1, 1, alpha)
+    love.graphics.setColor(.5, .5, .5, alpha)
 
     love.graphics.rectangle("fill", px, py, generalMethod.TILE_WIDTH * 2, height)
 
@@ -57,6 +81,7 @@ local function DrawFrameHeart(frameQuad, px, py)
     )
 end
 
+-- Function to Draw Heart
 local function DrawHeart()
     local nbHeart = myCharact.hpMax
     local nbHeartFull = math.floor(myCharact.hp / 2)
@@ -92,8 +117,31 @@ local function DrawHeart()
         end
         DrawFrameHeart(frameQuad, px, py)
     end
+
+    -- display the number of shield above the heart starting by the left
+    for i = 1, myCharact.shield do
+        if (i > 5) then
+            py = generalMethod.TILE_HEIGHT * 2
+            pxLine = 5
+        end
+
+        px = generalMethod.TILE_WIDTH + ((i - 1 - pxLine) * generalMethod.TILE_WIDTH)
+
+        love.graphics.draw(
+            mySprite.HUD.charactShield.TileSheet,
+            mySprite.HUD.charactShield.frame[1],
+            px,
+            py,
+            0,
+            1,
+            1,
+            generalMethod.TILE_WIDTH / 2,
+            generalMethod.TILE_HEIGHT / 2
+        )
+    end
 end
 
+-- Function to Draw Info regarding the Character
 local function DrawInfo()
     local px = generalMethod.TILE_WIDTH - generalMethod.TILE_WIDTH / 2
     local py = generalMethod.TILE_HEIGHT * 3 -- Multiply by 3 to be under the display of Heart
@@ -108,32 +156,36 @@ local function DrawInfo()
 
     -- Second Display: DMG
     py = py + generalMethod.HUDInfoFont:getHeight(text) * 1.5
-    text = "DMG: " .. tostring(myCharact.weapon.dmg)
+    text = "DMG: " .. tostring(myCharact.weapon.rarity[myCharact.weaponRarityIndex].dmg + myCharact.bonusDMG)
     love.graphics.print(text, px, py)
 
     -- Third Display: CoolDown ATK
     py = py + generalMethod.HUDInfoFont:getHeight(text) * 1.5
-    text = "CoolDown: " .. tostring(myCharact.weapon.dmg)
+    text = "CoolDown: " .. tostring(myCharact.weapon.rarity[myCharact.weaponRarityIndex].cooldown * myCharact.bonusCd)
     love.graphics.print(text, px, py)
 
     -- Five Display : Charact Speed
     py = py + generalMethod.HUDInfoFont:getHeight(text) * 1.5
-    text = "Speed: " .. tostring(myCharact.speed)
+    text = "Speed: " .. tostring(myCharact.speed + myCharact.bonusSpeed)
     love.graphics.print(text, px, py)
 
     -- Forth Display : Range
     if (myCharact.weapon.type ~= myArmory.typeWeapon.CLOSE) then
         py = py + generalMethod.HUDInfoFont:getHeight(text) * 1.5
-        text = "Range: " .. tostring(myCharact.weapon.range)
+        text = "Range: " .. tostring(myCharact.weapon.rarity[myCharact.weaponRarityIndex].range)
         love.graphics.print(text, px, py)
     end
 
     love.graphics.setFont(generalMethod.DefaultFont)
 end
 
+-- Function to Draw the ATK Icon
 local function DrawATKIcone()
     local px = generalMethod.TILE_WIDTH * 2
     local py = love.graphics.getHeight() - generalMethod.TILE_HEIGHT * 2
+
+    -- Draw a back rectangle faded linked to the rarity of the Object
+    RarityObject(px, py)
 
     -- Draw the Icon of the Weapon
     local frameQuad = mySprite.charact.bullets.frame[1]
@@ -153,38 +205,48 @@ local function DrawATKIcone()
     CooldownRectangle(px, py)
 
     -- Draw the Cooldown of the Weapon
-    CooldownDisplay(px, myCharact.canATK, myCharact.timerAttack, myCharact.weapon.cooldown)
+    CooldownDisplay(
+        px,
+        myCharact.canATK,
+        myCharact.timerAttack,
+        myCharact.weapon.rarity[myCharact.weaponRarityIndex].cooldown
+    )
 end
 
+-- Function to Draw the Ability Icon
 local function DrawABLIcone()
-    local px = generalMethod.TILE_WIDTH * 4.5
-    local py = love.graphics.getHeight() - generalMethod.TILE_HEIGHT * 2
-
     -- Draw the Icon of the Weapon
-    if (myCharact.weapon.abilities ~= nil) then
-        local frameQuad = mySprite.charact.bullets.frame[1]
-        love.graphics.draw(
-            mySprite.charact.bullets.TileSheet,
-            frameQuad,
-            px,
-            py,
-            0,
-            1,
-            1,
-            generalMethod.TILE_WIDTH / 2,
-            generalMethod.TILE_HEIGHT / 2
-        )
-    end
+    if (myCharact.weapon.ability ~= nil) then
+        local px = generalMethod.TILE_WIDTH * 4.5
+        local py = love.graphics.getHeight() - generalMethod.TILE_HEIGHT * 2
 
-    -- Draw the rectangle around the Weapon
-    CooldownRectangle(px, py)
+        -- Draw a back rectangle faded linked to the rarity of the Object
+        RarityObject(px, py)
 
-    -- Draw the Cooldown of the Weapon
-    if (myCharact.weapon.abilities ~= nil) then
-        CooldownDisplay(px, myCharact.canABL, myCharact.timerAbility, myCharact.weapon.abilities.cooldown)
+        
+            local frameQuad = mySprite.charact.ability.frame[1]
+            love.graphics.draw(
+                mySprite.charact.ability.TileSheet,
+                frameQuad,
+                px,
+                py,
+                0,
+                2,
+                2,
+                generalMethod.TILE_WIDTH / 2,
+                generalMethod.TILE_HEIGHT / 2
+            )
+        
+
+        -- Draw the rectangle around the Weapon
+        CooldownRectangle(px, py)
+
+        -- Draw the Cooldown of the Weapon
+        CooldownDisplay(px, myCharact.canABL, myCharact.timerAbility, myCharact.weapon.ability.rarity[myCharact.weaponRarityIndex].cooldown)
     end
 end
 
+-- Function to Draw the Mini Map
 local function DrawMiniMap()
     local px = love.graphics.getWidth() - generalMethod.TILE_WIDTH * 5
     local py = love.graphics.getHeight() - generalMethod.TILE_HEIGHT * 5
@@ -195,13 +257,9 @@ local function DrawMiniMap()
     love.graphics.print("MINI-MAP", px, py)
 end
 
-function HUD.DrawHUD()
-    DrawHeart()
-    DrawInfo()
-    DrawATKIcone()
-    --DrawABLIcone()
-    --DrawMiniMap()
-end
+--------------------------------------------------------------------------------------------------------
+
+------------------- FUNCTION CALLED BY THE OTHER MODULE -----------------------------------------
 
 -- Function called by LevelManager to draw the Information regarding the Object
 function HUD.DrawInfoBullItem(bonusItem)
@@ -218,24 +276,46 @@ function HUD.DrawInfoBullItem(bonusItem)
 
     -- Retrieve information to display regarding the type of the item
     if (bonusItem.type == myBonus.type.WEAPON) then
-        textInfo = {
-            "Type: " .. tostring(bonusItem.weapon.type),
-            "Dmg: " .. tostring(bonusItem.weapon.dmg),
-            "Cooldown: " .. tostring(bonusItem.weapon.cooldown)
-        }
+        if (bonusItem.weapon == myCharact.weapon) then
+            -- Draw the text regarding the item
+            love.graphics.setFont(generalMethod.ItemInfoFontSmaller)
+            textInfo = {
+                "Type: " .. tostring(bonusItem.weapon.type),
+                "Dmg: " ..
+                    tostring(bonusItem.weapon.rarity[1].dmg) .. " -> " .. tostring(bonusItem.weapon.rarity[2].dmg),
+                "CD: " ..
+                    tostring(
+                        bonusItem.weapon.rarity[1].cooldown .. " -> " .. tostring(bonusItem.weapon.rarity[1].cooldown)
+                    )
+            }
 
-        if (bonusItem.weapon.type ~= myArmory.typeWeapon.CLOSE) then
-            textInfo[4] = "Range: " .. tostring(bonusItem.weapon.range)
+            if (bonusItem.weapon.type ~= myArmory.typeWeapon.CLOSE) then
+                textInfo[4] =
+                    "Range: " ..
+                    tostring(bonusItem.weapon.rarity[1].range .. " -> " .. tostring(bonusItem.weapon.rarity[1].range))
+            end
+        else
+            -- Draw the text regarding the item
+            love.graphics.setFont(generalMethod.ItemInfoFont)
+            textInfo = {
+                "Type: " .. tostring(bonusItem.weapon.type),
+                "Dmg: " .. tostring(bonusItem.weapon.rarity[1].dmg),
+                "CD: " .. tostring(bonusItem.weapon.rarity[1].cooldown)
+            }
+
+            if (bonusItem.weapon.type ~= myArmory.typeWeapon.CLOSE) then
+                textInfo[4] = "Range: " .. tostring(bonusItem.weapon.rarity[1].range)
+            end
         end
     else
+        -- Draw the text regarding the item
+        love.graphics.setFont(generalMethod.ItemInfoFont)
         textInfo = {
             "Name: " .. tostring(bonusItem.item.name),
-            "Buff: " .. tostring(bonusItem.item.buff)
+            "Buff: " .. tostring(bonusItem.item.buff),
+            "Price: " .. tostring(bonusItem.price)
         }
     end
-
-    -- Draw the text regarding the item
-    love.graphics.setFont(generalMethod.ItemInfoFont)
 
     for i = 1, #textInfo do
         local px = panelPX + 5
@@ -261,6 +341,15 @@ function HUD.DrawInfoBullItem(bonusItem)
     love.graphics.setColor(1, 1, 1)
 
     love.graphics.setFont(generalMethod.DefaultFont)
+end
+
+-- Function called by the GameManager Draw
+function HUD.DrawHUD()
+    DrawHeart()
+    DrawInfo()
+    DrawATKIcone()
+    DrawABLIcone()
+    --DrawMiniMap()
 end
 
 return HUD

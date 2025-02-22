@@ -7,6 +7,7 @@ local mySprite = require("Game/SpriteManager")
 local myBullets = require("Game/BulletsManager")
 local myHUD = require("Game/HUDManager")
 local myCoins = require("Game/CoinManager")
+local myAudio = require("Game/AudioManager")
 local sceneState = require("MAE/SceneState")
 local pauseMenu = require("Menu/PauseMenu")
 
@@ -19,28 +20,31 @@ function game.UdaptePause()
 end
 
 function game.InitGame()
+    -- Be sure everything is set at null before launch the Init
+    print("[GameManager] We are on the Reset part")
+    generalMethod.InitVariable()
+
     -- Gestion des niveaux avec le load de l'ensemble des Enemies pour le niveau
+    print("[GameManager] We are on the Init part")
+    myLevel.LoadLevel()
     mySprite.LoadAGE(myEnemies)
     myCharact.InitCharacter()
-    myLevel.LoadLevel()
     myBonus.InitBonus(myCharact)
 end
 
 function game.UpdateGame(dt)
     if (not isPaused) then
+
+        myAudio.musicVolume = 0.65
+
         myCharact.UpdateCharact(dt, myEnemies, myLevel)
         myEnemies.UpdateEnemies(dt, myCharact, myLevel)
         myBullets.UpdateBullets(dt)
         myCoins.UpdateCoins(dt, myCharact)
-        myLevel.UpdateLevel(dt, myCharact)
+        myLevel.UpdateLevel(dt)
     else
+        myAudio.musicVolume = 0.75
         pauseMenu.UpdatePauseMenu()
-    end
-
-    if (myCharact.hp <= 0) then
-        return sceneState.GAMEOVER
-    else
-        return sceneState.GAME
     end
 end
 
@@ -69,27 +73,35 @@ end
 function game.Focus(f)
     if (f == false) then
         isPaused = not f
+
+        generalMethod.mouseVisible = true
+
+        love.mouse.setVisible(generalMethod.mouseVisible)
     end
 end
 
 function game.MousePressed(px, py, button)
     if (isPaused) then
-        return pauseMenu.MousePressed(px, py, button, game)
+        pauseMenu.MousePressed(px, py, button, game)
     else
-        return sceneState.GAME
+        sceneState.currentState = sceneState.GAME
     end
 end
 
 function game.KeyPressed(key)
-    myCharact.KeyPressed(key, myLevel)
-    myEnemies.KeyPressed(key)
-
-    if (key == "escape") then
+    if (key == "escape" and pauseMenu.optionMenu == false) then
         isPaused = not isPaused
 
-        generalMethod.mouseVisible = not generalMethod.mouseVisible
+        generalMethod.mouseVisible = isPaused
 
-    --love.mouse.setVisible(generalMethod.mouseVisible)
+        love.mouse.setVisible(generalMethod.mouseVisible)
+    end
+
+    if (isPaused) then
+        pauseMenu.KeyPressed(key)
+    else
+        myCharact.KeyPressed(key, myLevel)
+        myEnemies.KeyPressed(key)
     end
 end
 

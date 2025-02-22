@@ -8,11 +8,12 @@ bonus.type = {
     POTION = "POTION"
 }
 
+-- Function to give access to the Character to the UseBonus function called by the GameManager
 function bonus.InitBonus(localCharact)
     myCharact = localCharact
 end
 
-local function UsePotion(buff)
+local function UsePotion(buff)    
     myCharact.hp = myCharact.hp + buff
 
     if (myCharact.hp > myCharact.hpMax) then
@@ -47,7 +48,6 @@ end
 
 local function UseSpeedUp(buff)
     myCharact.bonusSpeed = myCharact.bonusSpeed + buff
-    myCharact.speed = myCharact.speed + buff
 end
 
 bonus.POTION = {
@@ -86,7 +86,7 @@ bonus.SPEEDUP = {
     type = bonus.type.BONUS,
     name = "SPD Up",
     tileSheet = love.graphics.newImage("Asset/Item/shoes_up.png"),
-    buff = 3,
+    buff = 1,
     useBonus = UseSpeedUp
 }
 

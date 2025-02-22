@@ -8,73 +8,11 @@ local bullets = {}
 
 local enemiesList = {}
 
--- Function called when we load the room
--- C'EST DEGUEULASSE, IL FAUT TROUVER UN AUTRE MOYEN POUR AVOIR ENEMYLIST CAR LE REQUIRE CREE UNE BOUCLE
-function bullets.UpdateEnemiesList(list)
-    enemiesList = list
-end
+local impactBullets = {}
 
-function bullets.CreateBullets(origine, target)
-    local angle = generalMethod.angle(origine.px, origine.py, target.px, target.py)
+------------------------ LOCAL FUNCTION MANAGING THE COLLISION ----------------------------------
 
-    local newBullet = {}
-    newBullet.typeOrigine = origine.typeEntity
-    newBullet.px = origine.px
-    newBullet.py = origine.py
-    newBullet.directionX = math.cos(angle)
-    newBullet.directionY = math.sin(angle)
-    newBullet.distanceMade = 0
-    newBullet.target = target
-
-    if (newBullet.typeOrigine == entitiesState.type.CHARACTER) then
-        newBullet.typeWeapon = origine.weapon.type
-        newBullet.imgTileSheetBullet = origine.weapon.imgTileSheetBullet
-        newBullet.speed = origine.weapon.bulletSpeed
-        newBullet.dmg = origine.weapon.dmg + origine.bonusDMG
-        newBullet.range = origine.weapon.range
-    else
-        newBullet.typeWeapon = origine.weaponType
-        newBullet.imgTileSheetBullet = origine.imgTileSheet
-        newBullet.speed = origine.bulletSpeed
-        newBullet.dmg = origine.dmg
-        newBullet.range = origine.rangeDMG
-        newBullet.indexFrameBullet = origine.indexFrame.indexBullet
-    end
-
-    -- Condition to check the type of the Weapon.
-    if (newBullet.typeWeapon == myArmory.typeWeapon.CLOSE) then
-        -- If it's CLOSE, we have to change the origine position to be "outside" of the Character Sprite
-        -- multiply by 2/3 because the img is facing up
-        newBullet.rotation = angle + math.pi * 2 / 3
-        -- We had this new variable on Bullet to compute the update of the bullet to stay closed to the Entity when it's moving
-        newBullet.entityOrigine = origine
-    elseif (newBullet.typeWeapon == myArmory.typeWeapon.RANGE) then
-        -- If it's RANGE, we have to change the rotation to put the head of the bullet toward the Entity
-        newBullet.rotation = angle + math.pi / 2
-    elseif (newBullet.typeWeapon == myArmory.typeWeapon.MAGIC) then
-        -- If it's MAGIC
-        newBullet.px = target.px
-        newBullet.py = target.py - 250
-        newBullet.impactPoint = target.py
-        newBullet.AOEEffect = origine.weapon.AOERange
-    end
-
-    -- Condition that check if the origine of the bullet it's an Enemy. Then we retrieve the index of the Enemy
-    if (newBullet.typeOrigine == entitiesState.type.ENEMIE) then
-        newBullet.indexEntity = origine.indexEnemy
-    end
-
-    table.insert(bullets, newBullet)
-
-    if (sceneState.DEBUGGERMODE == true) then
-        print(
-            "A new bullet has been created from " ..
-                origine.typeEntity ..
-                    " with a direction like " .. angle .. " with the weaponType " .. newBullet.typeWeapon
-        )
-    end
-end
-
+-- Function to check the collision between the Entity and the RANGE weapon
 local function CheckBulletCollider_RANGE(localBullet, target)
     if (localBullet.typeOrigine == entitiesState.type.CHARACTER) then
         local spriteWidht = generalMethod.TILE_WIDTH / 2
@@ -131,6 +69,7 @@ local function CheckBulletCollider_RANGE(localBullet, target)
     return false
 end
 
+-- Function to check the collision between the Entity and the CLOSE weapon
 local function CheckBulletCollider_CLOSE(localBullet, target)
     if (localBullet.typeOrigine == entitiesState.type.CHARACTER) then
         -- Check the dist between the weapon (+ size of the sprite) and the enemy
@@ -158,6 +97,7 @@ local function CheckBulletCollider_CLOSE(localBullet, target)
     end
 end
 
+-- Function to check the collision between the Entity and the MAGIC weapon
 local function CheckBulletCollider_MAGIC(localBullet, target)
     if (localBullet.typeOrigine == entitiesState.type.CHARACTER) then
         for i = 1, #enemiesList[generalMethod.currentRoom] do
@@ -167,6 +107,17 @@ local function CheckBulletCollider_MAGIC(localBullet, target)
             local distToHit = localEnemy.hitBox + localBullet.AOEEffect
             if (dist <= distToHit) then
                 enemiesList.ReceiveDmg(localBullet.dmg, i)
+
+                local localImpact = {}
+
+                localImpact.AOEEffect = localBullet.AOEEffect
+                localImpact.px = localBullet.px
+                localImpact.py = localBullet.py
+                localImpact.delay = 0.15
+                localImpact.timeBeforeFade = 0
+                                
+                table.insert(impactBullets, localImpact)
+
             end
         end
     elseif (localBullet.typeOrigine == entitiesState.type.ENEMIE) then
@@ -176,9 +127,89 @@ local function CheckBulletCollider_MAGIC(localBullet, target)
         if (dist <= distToHit) then
             target.ReceiveDmg(localBullet.dmg)
         end
+        
     end
 end
 
+-------------------------------------------------------------------------------------------
+
+------------------------ FUNCTION CALLED BY OTHER MODULE ----------------------------------
+
+-- Function called when we load the room
+-- C'EST DEGUEULASSE, IL FAUT TROUVER UN AUTRE MOYEN POUR AVOIR ENEMYLIST CAR LE REQUIRE CREE UNE BOUCLE
+function bullets.UpdateEnemiesList(list)
+    enemiesList = list
+end
+
+-- Function called by the CharacterManager.Attack and by the EnemyManager.Attack
+function bullets.CreateBullets(origine, target)
+    local angle = generalMethod.angle(origine.px, origine.py, target.px, target.py)
+
+    local newBullet = {}
+    newBullet.typeOrigine = origine.typeEntity
+    newBullet.px = origine.px
+    newBullet.py = origine.py
+    newBullet.directionX = math.cos(angle)
+    newBullet.directionY = math.sin(angle)
+    newBullet.distanceMade = 0
+    newBullet.target = target
+
+    if (newBullet.typeOrigine == entitiesState.type.CHARACTER) then
+        newBullet.typeWeapon = origine.weapon.type
+        newBullet.imgTileSheetBullet = origine.weapon.imgTileSheetBullet
+
+        newBullet.speed = origine.weapon.rarity[origine.weaponRarityIndex].bulletSpeed
+        newBullet.dmg = origine.weapon.rarity[origine.weaponRarityIndex].dmg + origine.bonusDMG
+        newBullet.range = origine.weapon.rarity[origine.weaponRarityIndex].range
+
+        if (newBullet.typeWeapon == myArmory.typeWeapon.MAGIC) then
+            newBullet.AOEEffect = origine.weapon.rarity[origine.weaponRarityIndex].AOERange
+            newBullet.targetPositionX = target.px
+            newBullet.targetPositionY = target.py
+        end
+    else
+        newBullet.typeWeapon = origine.weaponType
+        newBullet.imgTileSheetBullet = origine.imgTileSheet
+        newBullet.speed = origine.bulletSpeed
+        newBullet.dmg = origine.dmg
+        newBullet.range = origine.rangeDMG
+        newBullet.indexFrameBullet = origine.indexFrame.indexBullet
+    end
+
+    -- Condition to check the type of the Weapon.
+    if (newBullet.typeWeapon == myArmory.typeWeapon.CLOSE) then
+        -- If it's CLOSE, we have to change the origine position to be "outside" of the Character Sprite
+        -- multiply by 2/3 because the img is facing up
+        newBullet.rotation = angle + math.pi * 2 / 3
+        -- We had this new variable on Bullet to compute the update of the bullet to stay closed to the Entity when it's moving
+        newBullet.entityOrigine = origine
+    elseif (newBullet.typeWeapon == myArmory.typeWeapon.RANGE) then
+        -- If it's RANGE, we have to change the rotation to put the head of the bullet toward the Entity
+        newBullet.rotation = angle + math.pi / 2
+    elseif (newBullet.typeWeapon == myArmory.typeWeapon.MAGIC) then
+        -- If it's MAGIC
+        newBullet.px = target.px
+        newBullet.py = target.py - 250
+        newBullet.impactPoint = target.py
+    end
+
+    -- Condition that check if the origine of the bullet it's an Enemy. Then we retrieve the index of the Enemy
+    if (newBullet.typeOrigine == entitiesState.type.ENEMIE) then
+        newBullet.indexEntity = origine.indexEnemy
+    end
+
+    table.insert(bullets, newBullet)
+
+    if (sceneState.DEBUGGERMODE == true) then
+        -- print(
+        --     "[BulletsManager] A new bullet has been created from " ..
+        --         origine.typeEntity ..
+        --             " with a direction like " .. angle .. " with the weaponType " .. newBullet.typeWeapon
+        -- )
+    end
+end
+
+-- Function called by the GameManager Update
 function bullets.UpdateBullets(dt)
     for i = #bullets, 1, -1 do
         if (bullets[i].typeWeapon == myArmory.typeWeapon.RANGE) then
@@ -216,8 +247,17 @@ function bullets.UpdateBullets(dt)
             end
         end
     end
+
+    for i = #impactBullets, 1, -1 do
+        impactBullets[i].timeBeforeFade = impactBullets[i].timeBeforeFade + dt
+    
+        if (impactBullets[i].timeBeforeFade >= impactBullets[i].delay) then
+            table.remove(impactBullets, i)
+        end
+    end
 end
 
+-- Function called by the GameManager Draw
 function bullets.DrawBullets()
     for i = 1, #bullets do
         local frameQuad = nil
@@ -247,9 +287,22 @@ function bullets.DrawBullets()
             love.graphics.draw(tileSheet, frameQuad, bullets[i].px, bullets[i].py, bullets[i].rotation, 1, 1, ox, oy)
         end
 
-        if (bullets[i].typeWeapon == myArmory.typeWeapon.MAGIC and sceneState.DEBUGGERMODE == true) then
-            love.graphics.circle("line", bullets[i].px, bullets[i].py, bullets[i].AOEEffect)
+        if (bullets[i].typeWeapon == myArmory.typeWeapon.MAGIC) then
+            -- Draw the target of the bullets
+            love.graphics.setColor(1, 0 , 0)
+            love.graphics.circle("line", bullets[i].targetPositionX, bullets[i].targetPositionY, 5)      
+            love.graphics.setColor(1,1,1)
         end
+    end
+
+    for i = 1, #impactBullets do
+        love.graphics.setColor(1, 0 , 0, 0.5)
+        love.graphics.circle("line", impactBullets[i].px, impactBullets[i].py, impactBullets[i].AOEEffect)
+
+        love.graphics.setColor(1,0,0,0.25)
+        love.graphics.circle("fill", impactBullets[i].px, impactBullets[i].py, impactBullets[i].AOEEffect)
+
+        love.graphics.setColor(1,1,1,1)
     end
 end
 

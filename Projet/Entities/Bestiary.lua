@@ -33,13 +33,37 @@ bestiary.DUMMIES = {
     }
 }
 
+bestiary.SLUG = {
+    hpMAX = 10,
+    dmg = 0,
+    rangeDMG = 1,
+    rangeSearch = 1000,
+    cooldown = 1000,
+    moveSpeed = 1,
+    hitBox = (generalMethod.TILE_WIDTH / 2),
+    imgTileSheet = love.graphics.newImage(
+        "Asset/Bestiaire/AGE_" .. tostring(generalMethod.currentLevel) .. "/Slug.png"
+    ),
+    weaponType = myArmory.typeWeapon.CLOSE,
+    bulletSpeed = 0,
+    indexFrame = {
+        walkingStart = 1,
+        walkingEnd = 3,
+        hitStart = 4,
+        hitEnd = 5,
+        attackStart = 1,
+        attackEnd = 3,
+        indexBullet = 0
+    }
+}
+
 bestiary.SLIMBLUE = {
     hpMAX = 15,
     dmg = 2,
     rangeDMG = 50,
     rangeSearch = 200,
     cooldown = 2,
-    moveSpeed = 2.5,
+    moveSpeed = 2,
     hitBox = (generalMethod.TILE_WIDTH / 2),
     imgTileSheet = love.graphics.newImage(
         "Asset/Bestiaire/AGE_" .. tostring(generalMethod.currentLevel) .. "/SlimeBlue.png"
